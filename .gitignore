@@ -46,5 +46,6 @@ app.*.map.json
 /linux
 /macos
 /windows
+android/app/google-services.json
 firebase_options.dart
 firebase.json
