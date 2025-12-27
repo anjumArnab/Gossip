@@ -22,7 +22,7 @@ Future<void> initializeDependencies() async {
   // Firebase
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseDatabase.instance);
-
+  
   // Auth
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl())
@@ -33,7 +33,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => SignInAnonymously(sl()));
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerFactory(() => AuthController(sl(), sl()));
-
+  
   // Chat
   sl.registerLazySingleton<ChatRemoteDataSource>(
     () => ChatRemoteDataSourceImpl(sl())
@@ -44,6 +44,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => GetUsers(sl()));
   sl.registerLazySingleton(() => SendMessage(sl()));
   sl.registerLazySingleton(() => GetMessages(sl()));
+  
   sl.registerFactory(() => UsersController(sl(), sl()));
   sl.registerFactory(() => ChatController(sl(), sl(), sl()));
 }
