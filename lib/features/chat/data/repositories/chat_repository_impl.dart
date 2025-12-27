@@ -14,8 +14,18 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<void> sendMessage(String receiverId, String text) async {
-    return await remoteDataSource.sendMessage(receiverId, text);
+  Future<void> sendMessage({
+    required String receiverId,
+    required String text,
+    required MessageType type,
+    String? imageBase64,
+  }) async {
+    return await remoteDataSource.sendMessage(
+      receiverId: receiverId,
+      text: text,
+      type: type,
+      imageBase64: imageBase64,
+    );
   }
 
   @override
