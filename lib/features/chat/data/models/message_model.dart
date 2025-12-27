@@ -7,6 +7,8 @@ class MessageModel extends MessageEntity {
     required super.receiverId,
     required super.text,
     required super.timestamp,
+    required super.type,
+    super.imageBase64,
   });
 
   factory MessageModel.fromJson(String id, Map<dynamic, dynamic> json) {
@@ -16,7 +18,19 @@ class MessageModel extends MessageEntity {
       receiverId: json['receiverId'] ?? '',
       text: json['text'] ?? '',
       timestamp: json['timestamp'] ?? 0,
+      type: _parseMessageType(json['type']),
+      imageBase64: json['imageBase64'],
     );
+  }
+
+  static MessageType _parseMessageType(dynamic type) {
+    if (type == null) return MessageType.text;
+    
+    if (type is String) {
+      return type == 'image' ? MessageType.image : MessageType.text;
+    }
+    
+    return MessageType.text;
   }
 
   Map<String, dynamic> toJson() {
@@ -25,6 +39,8 @@ class MessageModel extends MessageEntity {
       'receiverId': receiverId,
       'text': text,
       'timestamp': timestamp,
+      'type': type.toString().split('.').last,
+      'imageBase64': imageBase64,
     };
   }
 }
