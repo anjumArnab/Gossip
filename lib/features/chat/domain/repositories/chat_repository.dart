@@ -3,6 +3,11 @@ import '../entities/message_entity.dart';
 
 abstract class ChatRepository {
   Stream<List<ChatUserEntity>> getUsers();
-  Future<void> sendMessage(String receiverId, String text);
+  Future<void> sendMessage({
+    required String receiverId,
+    required String text,
+    required MessageType type,
+    String? imageBase64,
+  });
   Stream<List<MessageEntity>> getMessages(String otherUserId);
 }
