@@ -42,6 +42,8 @@ class ChatPage extends StatelessWidget {
                       message: message.text,
                       isMe: isMe,
                       timestamp: message.timestamp,
+                      type: message.type,
+                      imageBase64: message.imageBase64,
                     );
                   },
                 );
@@ -61,27 +63,51 @@ class ChatPage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: ctrl.textController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                  if (ctrl.isUploadingImage)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: LinearProgressIndicator(),
+                    ),
+                  if (ctrl.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        ctrl.errorMessage!,
+                        style: const TextStyle(color: Colors.orange, fontSize: 12),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.image),
+                        onPressed: ctrl.isUploadingImage 
+                            ? null 
+                            : ctrl.pickAndSendImage,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: ctrl.textController,
+                          decoration: const InputDecoration(
+                            hintText: 'Type a message...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                          onSubmitted: (_) => ctrl.send(),
                         ),
                       ),
-                      onSubmitted: (_) => ctrl.send(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: ctrl.send,
-                    color: Theme.of(context).primaryColor,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: ctrl.send,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ],
                   ),
                 ],
               ),
