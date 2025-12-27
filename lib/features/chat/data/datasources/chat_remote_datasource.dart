@@ -1,11 +1,18 @@
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_user_model.dart';
 import '../models/message_model.dart';
+import '../../domain/entities/message_entity.dart';
 
 abstract class ChatRemoteDataSource {
   Stream<List<ChatUserModel>> getUsers();
-  Future<void> sendMessage(String receiverId, String text);
+  Future<void> sendMessage({
+    required String receiverId,
+    required String text,
+    required MessageType type,
+    String? imageBase64,
+  });
   Stream<List<MessageModel>> getMessages(String otherUserId);
 }
 
@@ -41,7 +48,12 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Future<void> sendMessage(String receiverId, String text) async {
+  Future<void> sendMessage({
+    required String receiverId,
+    required String text,
+    required MessageType type,
+    String? imageBase64,
+  }) async {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     
     final conversationId = _getConversationId(currentUserId, receiverId);
@@ -55,16 +67,22 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       receiverId: receiverId,
       text: text,
       timestamp: DateTime.now().millisecondsSinceEpoch,
+      type: type,
+      imageBase64: imageBase64,
     );
 
     // Store the message under conversations/{conversationId}/messages/{messageId}
     await messageRef.set(message.toJson());
     
     // Store conversation metadata
+    final lastMessagePreview = type == MessageType.image 
+        ? 'Image' 
+        : (text.length > 50 ? '${text.substring(0, 50)}...' : text);
+    
     await database.ref('conversations/$conversationId/metadata').set({
       'participants': [currentUserId, receiverId],
       'lastMessageTime': message.timestamp,
-      'lastMessage': text.length > 50 ? '${text.substring(0, 50)}...' : text,
+      'lastMessage': lastMessagePreview,
     });
   }
 
