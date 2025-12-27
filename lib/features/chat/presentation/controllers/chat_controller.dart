@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 import '../../../auth/domain/usecases/get_current_user.dart';
 import '../../domain/usecases/send_message.dart';
@@ -11,11 +14,18 @@ class ChatController extends GetxController {
   final GetMessages getMessages;
   final GetCurrentUser getCurrentUser;
 
-  ChatController(this.sendMessage, this.getMessages, this.getCurrentUser);
+  ChatController(
+    this.sendMessage,
+    this.getMessages,
+    this.getCurrentUser,
+  );
 
   final textController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+
   List<MessageEntity> messages = [];
   bool isLoading = false;
+  bool isUploadingImage = false;
   String? errorMessage;
   StreamSubscription? _subscription;
   String? otherUserId;
@@ -48,6 +58,61 @@ class ChatController extends GetxController {
     );
   }
 
+  Future<String> _imageToBase64(String imagePath) async {
+    try {
+      final bytes = await File(imagePath).readAsBytes();
+      return base64Encode(bytes);
+    } catch (e) {
+      throw Exception('Failed to encode image: $e');
+    }
+  }
+
+  Future<void> pickAndSendImage() async {
+    if (otherUserId == null) return;
+
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
+      );
+
+      if (image == null) return;
+
+      isUploadingImage = true;
+      update();
+
+      // Convert image to base64
+      final base64Image = await _imageToBase64(image.path);
+      
+      // Check size
+      final sizeInKB = (base64Image.length * 0.75) / 1024;
+      print('Image size: ${sizeInKB.toStringAsFixed(2)} KB');
+      
+      if (sizeInKB > 500) {
+        errorMessage = 'Warning: Image is large (${sizeInKB.toStringAsFixed(0)} KB). Consider reducing quality.';
+        update();
+      }
+
+      await sendMessage(
+        receiverId: otherUserId!,
+        text: textController.text.trim(),
+        type: MessageType.image,
+        imageBase64: base64Image,
+      );
+
+      textController.clear();
+      isUploadingImage = false;
+      errorMessage = null;
+      update();
+    } catch (e) {
+      errorMessage = 'Failed to send image: ${e.toString()}';
+      isUploadingImage = false;
+      update();
+    }
+  }
+
   Future<void> send() async {
     if (textController.text.trim().isEmpty || otherUserId == null) return;
 
@@ -55,7 +120,11 @@ class ChatController extends GetxController {
     textController.clear();
 
     try {
-      await sendMessage(otherUserId!, text);
+      await sendMessage(
+        receiverId: otherUserId!,
+        text: text,
+        type: MessageType.text,
+      );
     } catch (e) {
       errorMessage = e.toString();
       update();
