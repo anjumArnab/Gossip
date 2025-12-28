@@ -9,6 +9,7 @@ class MessageModel extends MessageEntity {
     required super.timestamp,
     required super.type,
     super.imageBase64,
+    super.isEdited = false,
   });
 
   factory MessageModel.fromJson(String id, Map<dynamic, dynamic> json) {
@@ -20,6 +21,7 @@ class MessageModel extends MessageEntity {
       timestamp: json['timestamp'] ?? 0,
       type: _parseMessageType(json['type']),
       imageBase64: json['imageBase64'],
+      isEdited: json['isEdited'] ?? false,
     );
   }
 
@@ -41,6 +43,7 @@ class MessageModel extends MessageEntity {
       'timestamp': timestamp,
       'type': type.toString().split('.').last,
       'imageBase64': imageBase64,
+      'isEdited': isEdited,
     };
   }
 }

@@ -11,6 +11,7 @@ class MessageEntity {
   final int timestamp;
   final MessageType type;
   final String? imageBase64;
+  final bool isEdited;
 
   MessageEntity({
     required this.id,
@@ -20,5 +21,6 @@ class MessageEntity {
     required this.timestamp,
     required this.type,
     this.imageBase64,
+    this.isEdited = false,
   });
 }
