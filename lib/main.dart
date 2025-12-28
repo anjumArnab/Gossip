@@ -5,12 +5,12 @@ import 'package:get/get.dart';
 import 'package:gossip/firebase_options.dart';
 import 'core/di/injection_container.dart';
 import 'core/routes/app_pages.dart';
-import 'core/routes/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initializeDependencies();
+  Get.testMode = true;
   runApp(const Gossip());
 }
 
@@ -19,12 +19,13 @@ class Gossip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp.router(
       title: 'Gossip',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(textTheme: GoogleFonts.poppinsTextTheme(),),
-      initialRoute: AppRoutes.signIn,
-      getPages: AppPages.routes,
+      theme: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      routerConfig: AppPages.router,
     );
   }
 }
