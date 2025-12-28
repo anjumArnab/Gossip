@@ -59,7 +59,7 @@ class SignInPage extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 100),
-                  AuthButton(label: 'Sign In Anonymously', onTap: ctrl.signIn),
+                  AuthButton(label: 'Sign In Anonymously', onTap: () => ctrl.signIn(context)),
                   if (ctrl.errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.all(16.0),
