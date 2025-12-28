@@ -13,6 +13,8 @@ import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/usecases/get_users.dart';
 import '../../features/chat/domain/usecases/send_message.dart';
 import '../../features/chat/domain/usecases/get_messages.dart';
+import '../../features/chat/domain/usecases/delete_message.dart';
+import '../../features/chat/domain/usecases/edit_message.dart';
 import '../../features/chat/presentation/controllers/users_controller.dart';
 import '../../features/chat/presentation/controllers/chat_controller.dart';
 
@@ -44,7 +46,15 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => GetUsers(sl()));
   sl.registerLazySingleton(() => SendMessage(sl()));
   sl.registerLazySingleton(() => GetMessages(sl()));
+  sl.registerLazySingleton(() => DeleteMessage(sl()));
+  sl.registerLazySingleton(() => EditMessage(sl()));
   
   sl.registerFactory(() => UsersController(sl(), sl()));
-  sl.registerFactory(() => ChatController(sl(), sl(), sl()));
+  sl.registerFactory(() => ChatController(
+    sl(), // SendMessage
+    sl(), // GetMessages
+    sl(), // GetCurrentUser
+    sl(), // DeleteMessage
+    sl(), // EditMessage
+  ));
 }
