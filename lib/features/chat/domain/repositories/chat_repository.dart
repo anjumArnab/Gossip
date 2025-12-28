@@ -10,4 +10,13 @@ abstract class ChatRepository {
     String? imageBase64,
   });
   Stream<List<MessageEntity>> getMessages(String otherUserId);
+  Future<void> deleteMessage({
+    required String otherUserId,
+    required String messageId,
+  });
+  Future<void> editMessage({
+    required String otherUserId,
+    required String messageId,
+    required String newText,
+  });
 }

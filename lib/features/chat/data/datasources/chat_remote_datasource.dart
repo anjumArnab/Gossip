@@ -1,4 +1,3 @@
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_user_model.dart';
@@ -14,6 +13,15 @@ abstract class ChatRemoteDataSource {
     String? imageBase64,
   });
   Stream<List<MessageModel>> getMessages(String otherUserId);
+  Future<void> deleteMessage({
+    required String otherUserId,
+    required String messageId,
+  });
+  Future<void> editMessage({
+    required String otherUserId,
+    required String messageId,
+    required String newText,
+  });
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -25,6 +33,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     final ids = [userId1, userId2]..sort();
     return '${ids[0]}_${ids[1]}';
   }
+
 
   @override
   Stream<List<ChatUserModel>> getUsers() {
@@ -58,7 +67,6 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     
     final conversationId = _getConversationId(currentUserId, receiverId);
     
-    // Create a new message reference inside the conversation
     final messageRef = database.ref('conversations/$conversationId/messages').push();
     
     final message = MessageModel(
@@ -69,12 +77,11 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       timestamp: DateTime.now().millisecondsSinceEpoch,
       type: type,
       imageBase64: imageBase64,
+      isEdited: false,
     );
 
-    // Store the message under conversations/{conversationId}/messages/{messageId}
     await messageRef.set(message.toJson());
     
-    // Store conversation metadata
     final lastMessagePreview = type == MessageType.image 
         ? 'Image' 
         : (text.length > 50 ? '${text.substring(0, 50)}...' : text);
@@ -90,10 +97,8 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   Stream<List<MessageModel>> getMessages(String otherUserId) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     
-    // Get conversation ID
     final conversationId = _getConversationId(currentUserId, otherUserId);
     
-    // Listen to messages under this specific conversation
     return database.ref('conversations/$conversationId/messages').onValue.map((event) {
       final messages = <MessageModel>[];
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
@@ -105,9 +110,37 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         });
       }
       
-      // Sort messages by timestamp
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return messages;
+    });
+  }
+    @override
+  Future<void> deleteMessage({
+    required String otherUserId,
+    required String messageId,
+  }) async {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final conversationId = _getConversationId(currentUserId, otherUserId);
+    
+    await database
+        .ref('conversations/$conversationId/messages/$messageId')
+        .remove();
+  }
+
+  @override
+  Future<void> editMessage({
+    required String otherUserId,
+    required String messageId,
+    required String newText,
+  }) async {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final conversationId = _getConversationId(currentUserId, otherUserId);
+    
+    await database
+        .ref('conversations/$conversationId/messages/$messageId')
+        .update({
+      'text': newText,
+      'isEdited': true,
     });
   }
 }

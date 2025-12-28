@@ -32,4 +32,28 @@ class ChatRepositoryImpl implements ChatRepository {
   Stream<List<MessageEntity>> getMessages(String otherUserId) {
     return remoteDataSource.getMessages(otherUserId);
   }
+
+  @override
+  Future<void> deleteMessage({
+    required String otherUserId,
+    required String messageId,
+  }) async {
+    return await remoteDataSource.deleteMessage(
+      otherUserId: otherUserId,
+      messageId: messageId,
+    );
+  }
+
+  @override
+  Future<void> editMessage({
+    required String otherUserId,
+    required String messageId,
+    required String newText,
+  }) async {
+    return await remoteDataSource.editMessage(
+      otherUserId: otherUserId,
+      messageId: messageId,
+      newText: newText,
+    );
+  }
 }
