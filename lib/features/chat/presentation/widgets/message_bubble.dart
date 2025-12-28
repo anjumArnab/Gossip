@@ -9,6 +9,9 @@ class MessageBubble extends StatelessWidget {
   final int timestamp;
   final MessageType type;
   final String? imageBase64;
+  final bool isEdited;
+  final bool isSelected;
+  final VoidCallback? onTap;
 
   const MessageBubble({
     super.key,
@@ -17,6 +20,9 @@ class MessageBubble extends StatelessWidget {
     required this.timestamp,
     required this.type,
     this.imageBase64,
+    this.isEdited = false,
+    this.isSelected = false,
+    this.onTap,
   });
 
   Uint8List? _decodeBase64Image() {
@@ -40,42 +46,66 @@ class MessageBubble extends StatelessWidget {
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.7,
-            ),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isMe ? Colors.blue[300] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (type == MessageType.image && imageBase64 != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: _buildImage(context),
-                  ),
-                  if (message.isNotEmpty) const SizedBox(height: 8),
-                ],
-                if (message.isNotEmpty)
-                  Text(
-                    message,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 16,
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
+              ),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? (isMe ? Colors.blue[700] : Colors.grey[400])
+                    : (isMe ? Colors.blue[600] : Colors.grey[300]),
+                borderRadius: BorderRadius.circular(20),
+                border: isSelected
+                    ? Border.all(color: Colors.blue[900]!, width: 2)
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (type == MessageType.image && imageBase64 != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: _buildImage(context),
                     ),
+                    if (message.isNotEmpty) const SizedBox(height: 8),
+                  ],
+                  if (message.isNotEmpty)
+                    Text(
+                      message,
+                      style: TextStyle(
+                        color: isMe ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        timeStr,
+                        style: TextStyle(
+                          color: isMe ? Colors.white70 : Colors.black54,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (isEdited) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          '(edited)',
+                          style: TextStyle(
+                            color: isMe ? Colors.white70 : Colors.black54,
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                const SizedBox(height: 4),
-                Text(
-                  timeStr,
-                  style: TextStyle(
-                    color: isMe ? Colors.white70 : Colors.black54,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
