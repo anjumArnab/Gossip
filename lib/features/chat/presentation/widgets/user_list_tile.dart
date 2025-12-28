@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../../../core/routes/routes.dart';
+import 'package:go_router/go_router.dart';
 
 class UserListTile extends StatelessWidget {
   final String userId;
@@ -23,7 +22,7 @@ class UserListTile extends StatelessWidget {
       title: Text('User ${userId.substring(0, 8)}'),
       subtitle: Text('Joined: ${createdAt.substring(0, 10)}'),
       onTap: () {
-        Get.toNamed(AppRoutes.chat, arguments: userId);
+        context.push('/chat/$userId');
       },
     );
   }
