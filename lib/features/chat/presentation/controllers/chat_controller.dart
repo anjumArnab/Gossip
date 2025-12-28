@@ -7,17 +7,23 @@ import 'dart:async';
 import '../../../auth/domain/usecases/get_current_user.dart';
 import '../../domain/usecases/send_message.dart';
 import '../../domain/usecases/get_messages.dart';
+import '../../domain/usecases/delete_message.dart';
+import '../../domain/usecases/edit_message.dart';
 import '../../domain/entities/message_entity.dart';
 
 class ChatController extends GetxController {
   final SendMessage sendMessage;
   final GetMessages getMessages;
   final GetCurrentUser getCurrentUser;
+  final DeleteMessage deleteMessage;
+  final EditMessage editMessage;
 
   ChatController(
     this.sendMessage,
     this.getMessages,
     this.getCurrentUser,
+    this.deleteMessage,
+    this.editMessage,
   );
 
   final textController = TextEditingController();
@@ -30,6 +36,8 @@ class ChatController extends GetxController {
   StreamSubscription? _subscription;
   String? otherUserId;
   String? currentUserId;
+  String? selectedMessageId;
+  String? editingMessageId;
 
   void initChat(String userId) {
     otherUserId = userId;
@@ -58,6 +66,62 @@ class ChatController extends GetxController {
     );
   }
 
+  void selectMessage(String? messageId) {
+    selectedMessageId = messageId;
+    update();
+  }
+
+  void startEditing(String messageId, String currentText) {
+    editingMessageId = messageId;
+    textController.text = currentText;
+    selectedMessageId = null;
+    update();
+  }
+
+  void cancelEditing() {
+    editingMessageId = null;
+    textController.clear();
+    update();
+  }
+
+  Future<void> confirmEdit() async {
+    if (editingMessageId == null || otherUserId == null) return;
+    if (textController.text.trim().isEmpty) return;
+
+    final newText = textController.text.trim();
+    final messageId = editingMessageId!;
+
+    try {
+      await editMessage(
+        otherUserId: otherUserId!,
+        messageId: messageId,
+        newText: newText,
+      );
+
+      cancelEditing();
+    } catch (e) {
+      errorMessage = 'Failed to edit message: ${e.toString()}';
+      update();
+    }
+  }
+
+  Future<void> confirmDelete(String messageId) async {
+    if (otherUserId == null) return;
+
+    try {
+      await deleteMessage(
+        otherUserId: otherUserId!,
+        messageId: messageId,
+      );
+
+      selectedMessageId = null;
+      update();
+    } catch (e) {
+      errorMessage = 'Failed to delete message: ${e.toString()}';
+      update();
+    }
+  }
+
   Future<String> _imageToBase64(String imagePath) async {
     try {
       final bytes = await File(imagePath).readAsBytes();
@@ -83,10 +147,8 @@ class ChatController extends GetxController {
       isUploadingImage = true;
       update();
 
-      // Convert image to base64
       final base64Image = await _imageToBase64(image.path);
       
-      // Check size
       final sizeInKB = (base64Image.length * 0.75) / 1024;
       print('Image size: ${sizeInKB.toStringAsFixed(2)} KB');
       
@@ -115,6 +177,12 @@ class ChatController extends GetxController {
 
   Future<void> send() async {
     if (textController.text.trim().isEmpty || otherUserId == null) return;
+
+    // Check if editing
+    if (editingMessageId != null) {
+      await confirmEdit();
+      return;
+    }
 
     final text = textController.text.trim();
     textController.clear();
